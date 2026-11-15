@@ -1,7 +1,10 @@
 export const ids = {
   inspect: {
-    delete: (itemId: number): string => `insp:del:${itemId}`,
-    randomize: (mailboxId: number): string => `insp:rand:${mailboxId}`,
+    delete:    (itemId: number,    page: number): string => `insp:del:${itemId}:${page}`,
+    randomize: (mailboxId: number, page: number): string => `insp:rand:${mailboxId}:${page}`,
+    prev:      (mailboxId: number, page: number): string => `insp:prev:${mailboxId}:${page}`,
+    next:      (mailboxId: number, page: number): string => `insp:next:${mailboxId}:${page}`,
+    pageLabel: (page: number, totalPages: number): string => `insp:_:${page}:${totalPages}`,
   },
 };
 
