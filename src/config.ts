@@ -13,4 +13,5 @@ export const config = {
   dbPath: process.env['DB_PATH']?.trim() || './data/bot.db',
   uploadsDir: process.env['UPLOADS_DIR']?.trim() || './data/uploads',
   enforceChannelPermissions: process.env['ENFORCE_CHANNEL_PERMISSIONS']?.trim().toLowerCase() === 'true',
+  maxUploadBytes: parseInt(process.env['MAX_UPLOAD_MB'] ?? '100', 10) * 1024 * 1024,
 } as const;

@@ -134,7 +134,7 @@ export async function handleInspectComponent(interaction: ButtonInteraction<'cac
 
     // Verify ownership
     const mailbox = getMailboxById(item.mailboxId);
-    if (!mailbox || mailbox.userId !== interaction.user.id) {
+    if (!mailbox || mailbox.userId !== interaction.user.id || mailbox.guildId !== interaction.guildId) {
       await interaction.reply({ content: '❌ You do not own that item.', flags: MessageFlags.Ephemeral });
       return;
     }
@@ -152,7 +152,7 @@ export async function handleInspectComponent(interaction: ButtonInteraction<'cac
     if (isNaN(mailboxId)) return;
 
     const mailbox = getMailboxById(mailboxId);
-    if (!mailbox || mailbox.userId !== interaction.user.id) {
+    if (!mailbox || mailbox.userId !== interaction.user.id || mailbox.guildId !== interaction.guildId) {
       await interaction.reply({ content: '❌ You do not own that mailbox.', flags: MessageFlags.Ephemeral });
       return;
     }

@@ -71,6 +71,9 @@ async function postItem(client: Client<true>, mailbox: Mailbox, item: Item): Pro
   if (!channel?.isTextBased() || channel.isDMBased()) {
     throw new Error(`Channel ${mailbox.channelId} is not a postable text channel`);
   }
+  if (!('guild' in channel) || channel.guild.id !== mailbox.guildId) {
+    throw new Error(`Channel ${mailbox.channelId} does not belong to guild ${mailbox.guildId}`);
+  }
 
   if (item.type === 'text') {
     await channel.send({ content: item.content });

@@ -1,7 +1,7 @@
 import { ChannelType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 import { createWriteStream, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 import { addItem, getMailbox } from '../database/db.js';
@@ -11,6 +11,13 @@ import type { Item } from '../types.js';
 import type { Command } from './types.js';
 
 const DATE_RE = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/;
+
+function isValidMMdd(s: string): boolean {
+  if (!DATE_RE.test(s)) return false;
+  const [m, d] = s.split('/').map(Number);
+  const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return d >= 1 && d <= (daysInMonth[m! - 1] ?? 0);
+}
 
 export const mail: Command = {
   data: new SlashCommandBuilder()
@@ -53,9 +60,17 @@ export const mail: Command = {
       return;
     }
 
-    if (dateStr && !DATE_RE.test(dateStr)) {
+    if (dateStr && !isValidMMdd(dateStr)) {
       await interaction.reply({
         content: '❌ Invalid date format. Use MM/dd (e.g. `12/25`, `01/01`).',
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    if (attachment && attachment.size > config.maxUploadBytes) {
+      await interaction.reply({
+        content: `❌ Attachment too large (max ${config.maxUploadBytes / 1024 / 1024} MB).`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -85,17 +100,23 @@ export const mail: Command = {
     if (attachment) {
       const isImage = attachment.contentType?.startsWith('image/') ?? false;
       const type: Item['type'] = isImage ? 'image' : 'file';
-      const filename = attachment.name;
+      const filename = basename(attachment.name);
       const uploadDir = join(config.uploadsDir, String(mailbox.id));
       mkdirSync(uploadDir, { recursive: true });
       const localPath = join(uploadDir, `${crypto.randomUUID()}_${filename}`);
 
-      const response = await fetch(attachment.url);
-      if (!response.ok || !response.body) {
-        await interaction.editReply({ content: '❌ Failed to download attachment. Please try again.' });
-        return;
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), 30_000);
+      try {
+        const response = await fetch(attachment.url, { signal: ac.signal });
+        if (!response.ok || !response.body) {
+          await interaction.editReply({ content: '❌ Failed to download attachment. Please try again.' });
+          return;
+        }
+        await pipeline(Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]), createWriteStream(localPath));
+      } finally {
+        clearTimeout(timer);
       }
-      await pipeline(Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]), createWriteStream(localPath));
 
       addItem({
         mailboxId: mailbox.id,

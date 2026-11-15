@@ -6,6 +6,8 @@ services:
     environment:
       DB_PATH: /data/bot.db
       UPLOADS_DIR: /data/uploads
+      PUID: ${PUID:-99}
+      PGID: ${PGID:-100}
     volumes:
       - ${DATA_DIR:-./data}:/data
     restart: unless-stopped
