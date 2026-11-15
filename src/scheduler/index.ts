@@ -75,11 +75,18 @@ async function postItem(client: Client<true>, mailbox: Mailbox, item: Item): Pro
     throw new Error(`Channel ${mailbox.channelId} does not belong to guild ${mailbox.guildId}`);
   }
 
+  const attribution = `\n*sent by <@${mailbox.userId}>*`;
+
   if (item.type === 'text') {
-    await channel.send({ content: item.content });
+    await channel.send({
+      content: item.content + attribution,
+      allowedMentions: { parse: [] },
+    });
   } else {
     await channel.send({
+      content: `*sent by <@${mailbox.userId}>*`,
       files: [{ attachment: item.content, name: item.filename ?? 'file' }],
+      allowedMentions: { parse: [] },
     });
   }
 }
