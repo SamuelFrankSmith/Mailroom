@@ -16,6 +16,7 @@ export interface Item {
   type: 'text' | 'image' | 'file';
   content: string;        // text body OR absolute local file path
   filename: string | null;
+  fileSize: number | null;       // bytes for image/file items; null for text
   scheduledDate: string | null;  // 'MM/dd' or null
   createdAt: string;      // ISO 8601
 }

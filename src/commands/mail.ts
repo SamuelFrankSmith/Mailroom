@@ -4,7 +4,7 @@ import { createWriteStream, mkdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
-import { addItem, getMailbox } from '../database/db.js';
+import { addItem, getMailbox, getMailboxAttachmentSizeTotal, getMailboxItemCount } from '../database/db.js';
 import { config } from '../config.js';
 import { userCanPostInChannel } from '../permissions.js';
 import type { Item } from '../types.js';
@@ -93,6 +93,27 @@ export const mail: Command = {
       return;
     }
 
+    const itemCount = getMailboxItemCount(mailbox.id);
+    if (itemCount >= config.maxQueueItems) {
+      await interaction.reply({
+        content: `❌ Your mailbox for <#${channel.id}> is full (${config.maxQueueItems} items). Delete some before adding more.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    if (attachment) {
+      const currentBytes = getMailboxAttachmentSizeTotal(mailbox.id);
+      if (currentBytes + attachment.size > config.maxCollectionAttachmentBytes) {
+        const limitMb = config.maxCollectionAttachmentBytes / 1024 / 1024;
+        await interaction.reply({
+          content: `❌ Adding this attachment would exceed the ${limitMb} MB total attachment limit for this mailbox. Delete some attachments first.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     const addedItems: Array<{ label: string; date: string | null }> = [];
@@ -123,6 +144,7 @@ export const mail: Command = {
         type,
         content: localPath,
         filename,
+        fileSize: attachment.size,
         scheduledDate: dateStr ?? null,
       });
       addedItems.push({ label: `${isImage ? '🖼️' : '📄'} \`${filename}\``, date: dateStr ?? null });
@@ -134,6 +156,7 @@ export const mail: Command = {
         type: 'text',
         content,
         filename: null,
+        fileSize: null,
         scheduledDate: dateStr ?? null,
       });
       const preview = content.length > 80 ? content.slice(0, 80) + '…' : content;

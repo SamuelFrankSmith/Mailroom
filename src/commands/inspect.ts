@@ -329,6 +329,14 @@ export async function handleInspectComponent(interaction: ButtonInteraction<'cac
       return;
     }
 
+    const timeMatch = TIME_RE.exec(newTime);
+    const h = parseInt(timeMatch?.[1] ?? '', 10);
+    const m = parseInt(timeMatch?.[2] ?? '', 10);
+    if (!timeMatch || h > 23 || m > 59 || validateFrequency(newFreq) !== null) {
+      await interaction.update({ content: '❌ Invalid schedule data.', embeds: [], components: [] });
+      return;
+    }
+
     const nextPostAt = computeInitialNextPostAt(newTime, newFreq, new Date().toISOString());
     upsertMailbox({
       userId: mailbox.userId,

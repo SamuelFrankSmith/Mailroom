@@ -21,6 +21,7 @@ interface ItemRow {
   type: string;
   content: string;
   filename: string | null;
+  file_size: number | null;
   scheduled_date: string | null;
   created_at: string;
 }
@@ -48,6 +49,7 @@ function toItem(row: ItemRow): Item {
     type: row.type as Item['type'],
     content: row.content,
     filename: row.filename,
+    fileSize: row.file_size,
     scheduledDate: row.scheduled_date,
     createdAt: row.created_at,
   };
@@ -86,6 +88,9 @@ export function openDatabase(path: string): void {
   `);
   try {
     db.exec('ALTER TABLE mailboxes ADD COLUMN last_pinned_post_date TEXT');
+  } catch { /* column already exists on upgraded installs */ }
+  try {
+    db.exec('ALTER TABLE items ADD COLUMN file_size INTEGER');
   } catch { /* column already exists on upgraded installs */ }
 }
 
@@ -152,13 +157,14 @@ export function getMailboxesWithDuePinnedItems(date: string): Mailbox[] {
 
 export function addItem(fields: Omit<Item, 'id' | 'createdAt'>): Item {
   const result = db.prepare(`
-    INSERT INTO items (mailbox_id, type, content, filename, scheduled_date)
-    VALUES (:mailboxId, :type, :content, :filename, :scheduledDate)
+    INSERT INTO items (mailbox_id, type, content, filename, file_size, scheduled_date)
+    VALUES (:mailboxId, :type, :content, :filename, :fileSize, :scheduledDate)
   `).run({
     mailboxId: fields.mailboxId,
     type: fields.type,
     content: fields.content,
     filename: fields.filename ?? null,
+    fileSize: fields.fileSize ?? null,
     scheduledDate: fields.scheduledDate ?? null,
   });
 
@@ -194,4 +200,16 @@ export function getUnscheduledItems(mailboxId: number): Item[] {
 
 export function deleteItem(id: number): void {
   db.prepare('DELETE FROM items WHERE id = ?').run(id);
+}
+
+export function getMailboxItemCount(mailboxId: number): number {
+  const row = db.prepare('SELECT COUNT(*) AS cnt FROM items WHERE mailbox_id = ?')
+    .get(mailboxId) as unknown as { cnt: number };
+  return row.cnt;
+}
+
+export function getMailboxAttachmentSizeTotal(mailboxId: number): number {
+  const row = db.prepare('SELECT COALESCE(SUM(file_size), 0) AS total FROM items WHERE mailbox_id = ?')
+    .get(mailboxId) as unknown as { total: number };
+  return row.total;
 }
