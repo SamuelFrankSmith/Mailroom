@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { openDatabase } from './database/db.js';
 import { commandMap } from './commands/index.js';
-import { handleInspectComponent } from './commands/inspect.js';
+import { handleInspectComponent, handleInspectModal } from './commands/inspect.js';
 import { deployCommands } from './deploy-commands.js';
 import { startScheduler } from './scheduler/index.js';
 import { parseCustomId } from './ui/customIds.js';
@@ -36,6 +36,14 @@ client.on(Events.InteractionCreate, async interaction => {
       const { namespace } = parseCustomId(interaction.customId);
       if (namespace === 'insp') {
         await handleInspectComponent(interaction);
+      }
+      return;
+    }
+
+    if (interaction.isModalSubmit()) {
+      const { namespace } = parseCustomId(interaction.customId);
+      if (namespace === 'insp') {
+        await handleInspectModal(interaction);
       }
       return;
     }

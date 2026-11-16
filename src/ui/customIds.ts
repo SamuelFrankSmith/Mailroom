@@ -4,7 +4,14 @@ export const ids = {
     randomize: (mailboxId: number, page: number): string => `insp:rand:${mailboxId}:${page}`,
     prev:      (mailboxId: number, page: number): string => `insp:prev:${mailboxId}:${page}`,
     next:      (mailboxId: number, page: number): string => `insp:next:${mailboxId}:${page}`,
-    pageLabel: (page: number, totalPages: number): string => `insp:_:${page}:${totalPages}`,
+    pageLabel:     (page: number, totalPages: number): string => `insp:_:${page}:${totalPages}`,
+    delYes:        (itemId: number,    page: number): string => `insp:del-yes:${itemId}:${page}`,
+    delNo:         (itemId: number,    page: number): string => `insp:del-no:${itemId}:${page}`,
+    editFreq:      (mailboxId: number, page: number): string => `insp:edit-freq:${mailboxId}:${page}`,
+    editFreqModal: (mailboxId: number, page: number): string => `insp:edit-freq-modal:${mailboxId}:${page}`,
+    confirmFreq:   (mailboxId: number, page: number, hh: string, mm: string, freq: string): string =>
+                     `insp:confirm-freq:${mailboxId}:${page}:${hh}:${mm}:${freq}`,
+    cancelFreq:    (mailboxId: number, page: number): string => `insp:cancel-freq:${mailboxId}:${page}`,
   },
 };
 
