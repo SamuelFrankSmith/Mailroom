@@ -10,7 +10,7 @@ Each user has their own mailbox per channel. When the schedule fires, the bot pi
 | --- | --- | --- |
 | `/establish-mailbox` | Everyone | Create or update a mailbox for a channel: pick the `channel`, the `time` (HH:mm UTC) for posts, and how often to post (`frequency`, e.g. `3d`, `2w`). |
 | `/mail` | Everyone | Add an item to your mailbox: `channel`, then at least one of `content` (text) or `attachment` (image or file). Optional `date` (MM/dd) pins the item to a specific calendar date. |
-| `/inspect` | Everyone | View your queue for a channel. Each item gets a delete button. A **Randomize** toggle switches between in-order and random pick. |
+| `/inspect` | Everyone | View your queue for a channel. Items are shown 10 per page; use the ◀/▶ buttons to navigate. Each item gets a 🗑 delete button (with a confirmation step). A **Randomize** toggle switches between in-order and random pick. The embed shows the current schedule (frequency, post time, next post) and an **✏️ Edit frequency** button to update it. |
 
 All command replies are only visible to the person who ran them.
 
@@ -20,9 +20,11 @@ Every user has their own mailbox per channel. You can only see and manage your o
 
 If the queue is empty when a post is due, nothing is posted and the mailbox waits until its next scheduled time.
 
+Every post includes a small attribution line — *sent by @username* — in italics below the content.
+
 ### Date-pinned items
 
-When you add an item with a `date`, it's held back until that calendar date (UTC). On that day, all pinned items post instead of the regular queue pick — the queue is left untouched. Pinned items are removed after they post.
+When you add an item with a `date`, it's held back until that calendar date (UTC). On that date, the bot fires all pinned items at the first scheduled tick after midnight UTC — independent of how often the mailbox normally posts. The regular queue is skipped for that day. Pinned items are removed after they post.
 
 Dates like `02/30` or `04/31` are rejected at entry because they can never match a real calendar date.
 
@@ -174,7 +176,7 @@ Set `DB_PATH` and `UPLOADS_DIR` in your `.env` to writable local paths, or accep
 
 ## Limits
 
-- `/inspect` shows delete buttons for up to 20 items at a time. If your queue is longer, delete some to see buttons for the rest.
+- `/inspect` shows 10 items per page. Use the ◀/▶ navigation buttons to browse queues longer than 10 items.
 - Text content is subject to Discord's 2,000-character message limit. Items that exceed it will fail to post on every attempt until they're deleted from the queue.
 - Attachments are capped at `MAX_UPLOAD_MB` (default 100 MB) on the way in. Discord itself caps file uploads at 25 MB on most servers, so files between those limits will be accepted by `/mail` but fail when the post fires.
 - Frequency units are `h` (hours), `d` (days), `w` (weeks), and `y` (years) only. Months are not supported.
