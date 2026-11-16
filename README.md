@@ -97,7 +97,9 @@ All settings go in `.env`.
 | `CLIENT_ID` | Yes | | Application ID. |
 | `GUILD_ID` | No | | Register commands to one server only, so they appear instantly. Without it, commands work in every server the bot is in but can take up to an hour to show up. To get a server's ID, turn on **Developer Mode** (User Settings → Advanced), then right-click the server icon and choose **Copy Server ID**. |
 | `ENFORCE_CHANNEL_PERMISSIONS` | No | `false` | Only let users create mailboxes in channels where they have Send Messages permission. See [Channel permissions](#channel-permissions). |
-| `MAX_UPLOAD_MB` | No | `100` | Maximum file size in megabytes for attachments added with `/mail`. |
+| `MAX_UPLOAD_MB` | No | `100` | Maximum file size in megabytes for a single attachment added with `/mail`. |
+| `MAX_QUEUE_ITEMS_PER_COLLECTION` | No | `400` | Maximum number of items (text and attachments combined) allowed in a single mailbox. `/mail` is rejected once this limit is reached. |
+| `MAX_COLLECTION_ATTACHMENT_MB` | No | `100` | Maximum total attachment storage in megabytes across all items in a single mailbox. `/mail` is rejected if adding the new attachment would push the mailbox over this limit. Text items do not count toward this total. |
 | `PUID` / `PGID` | No | `99` / `100` | User and group ID the container runs as. They must be able to write to the data folder. |
 | `DATA_DIR` | No | `./data` | Folder on the host where the database and uploads are stored. |
 | `DB_PATH` | No | `/data/bot.db` | Database file path inside the container. Only change this if running without Docker; Compose sets it for you. |
@@ -178,7 +180,9 @@ Set `DB_PATH` and `UPLOADS_DIR` in your `.env` to writable local paths, or accep
 
 - `/inspect` shows 10 items per page. Use the ◀/▶ navigation buttons to browse queues longer than 10 items.
 - Text content is subject to Discord's 2,000-character message limit. Items that exceed it will fail to post on every attempt until they're deleted from the queue.
-- Attachments are capped at `MAX_UPLOAD_MB` (default 100 MB) on the way in. Discord itself caps file uploads at 25 MB on most servers, so files between those limits will be accepted by `/mail` but fail when the post fires.
+- Each mailbox holds at most `MAX_QUEUE_ITEMS_PER_COLLECTION` items (default 400, text and attachments combined).
+- Attachment storage per mailbox is capped at `MAX_COLLECTION_ATTACHMENT_MB` (default 100 MB total). Text items do not count toward this limit.
+- Individual attachments are capped at `MAX_UPLOAD_MB` (default 100 MB) on the way in. Discord itself caps file uploads at 25 MB on most servers, so files between those limits will be accepted by `/mail` but fail when the post fires.
 - Frequency units are `h` (hours), `d` (days), `w` (weeks), and `y` (years) only. Months are not supported.
 
 ## License
