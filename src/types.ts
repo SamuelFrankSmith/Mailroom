@@ -6,7 +6,8 @@ export interface Mailbox {
   frequency: string;    // e.g. '3d', '2w', '1h'
   postTime: string;     // 'HH:mm' (UTC)
   randomize: boolean;
-  nextPostAt: string;   // ISO 8601 UTC
+  nextPostAt: string;         // ISO 8601 UTC
+  lastPinnedPostDate: string | null;  // 'MM/dd' UTC — set after pinned items fire for the day
 }
 
 export interface Item {

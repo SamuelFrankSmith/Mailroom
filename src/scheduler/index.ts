@@ -5,7 +5,10 @@ import {
   deleteItem,
   getDatePinnedItems,
   getDueMailboxes,
+  getMailboxById,
+  getMailboxesWithDuePinnedItems,
   getUnscheduledItems,
+  setLastPinnedPostDate,
   setNextPostAt,
 } from '../database/db.js';
 import type { Item, Mailbox } from '../types.js';
@@ -22,14 +25,35 @@ async function tick(client: Client<true>): Promise<void> {
   if (ticking) return;
   ticking = true;
   try {
+    const todayMMdd = getTodayMMdd();
+
+    // Phase 1: post pinned items for today across ALL mailboxes, independent of their schedule
+    const pinnedMailboxes = getMailboxesWithDuePinnedItems(todayMMdd);
+    for (const mailbox of pinnedMailboxes) {
+      if (mailbox.lastPinnedPostDate === todayMMdd) continue; // already handled today
+      try {
+        const pinnedItems = getDatePinnedItems(mailbox.id, todayMMdd);
+        for (const item of pinnedItems) {
+          await postItem(client, mailbox, item);
+          cleanupItem(item);
+        }
+        setLastPinnedPostDate(mailbox.id, todayMMdd); // stamp AFTER all items succeed
+      } catch (err) {
+        console.error(`[scheduler] Failed to post pinned items for mailbox ${mailbox.id} (user ${mailbox.userId}):`, err);
+      }
+    }
+
+    // Phase 2: regular scheduled mailboxes
     const now = new Date().toISOString();
     const dueMailboxes = getDueMailboxes(now);
     for (const mailbox of dueMailboxes) {
       // Advance next_post_at BEFORE posting — crash safety
       const newNext = computeNextPostAt(mailbox.postTime, mailbox.frequency, mailbox.nextPostAt);
       setNextPostAt(mailbox.id, newNext);
+      // Re-fetch to pick up lastPinnedPostDate set in Phase 1
+      const fresh = getMailboxById(mailbox.id) ?? mailbox;
       try {
-        await processMailbox(client, mailbox);
+        await processMailbox(client, fresh);
       } catch (err) {
         console.error(`[scheduler] Failed to process mailbox ${mailbox.id} (user ${mailbox.userId}, channel ${mailbox.channelId}):`, err);
       }
@@ -41,6 +65,9 @@ async function tick(client: Client<true>): Promise<void> {
 
 async function processMailbox(client: Client<true>, mailbox: Mailbox): Promise<void> {
   const todayMMdd = getTodayMMdd();
+  // Pinned items for today were already posted in Phase 1 — skip the regular queue too
+  if (mailbox.lastPinnedPostDate === todayMMdd) return;
+
   const pinnedItems = getDatePinnedItems(mailbox.id, todayMMdd);
 
   if (pinnedItems.length > 0) {

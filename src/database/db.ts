@@ -12,6 +12,7 @@ interface MailboxRow {
   post_time: string;
   randomize: number;
   next_post_at: string;
+  last_pinned_post_date: string | null;
 }
 
 interface ItemRow {
@@ -36,6 +37,7 @@ function toMailbox(row: MailboxRow): Mailbox {
     postTime: row.post_time,
     randomize: row.randomize === 1,
     nextPostAt: row.next_post_at,
+    lastPinnedPostDate: row.last_pinned_post_date,
   };
 }
 
@@ -82,9 +84,12 @@ export function openDatabase(path: string): void {
     CREATE INDEX IF NOT EXISTS idx_items_mailbox ON items(mailbox_id);
     CREATE INDEX IF NOT EXISTS idx_mailboxes_nextpost ON mailboxes(next_post_at);
   `);
+  try {
+    db.exec('ALTER TABLE mailboxes ADD COLUMN last_pinned_post_date TEXT');
+  } catch { /* column already exists on upgraded installs */ }
 }
 
-export function upsertMailbox(fields: Omit<Mailbox, 'id'>): Mailbox {
+export function upsertMailbox(fields: Omit<Mailbox, 'id' | 'lastPinnedPostDate'>): Mailbox {
   db.prepare(`
     INSERT INTO mailboxes (user_id, channel_id, guild_id, frequency, post_time, randomize, next_post_at)
     VALUES (:userId, :channelId, :guildId, :frequency, :postTime, :randomize, :nextPostAt)
@@ -130,6 +135,19 @@ export function setMailboxRandomize(id: number, randomize: boolean): void {
 
 export function setNextPostAt(id: number, nextPostAt: string): void {
   db.prepare('UPDATE mailboxes SET next_post_at = ? WHERE id = ?').run(nextPostAt, id);
+}
+
+export function setLastPinnedPostDate(id: number, date: string): void {
+  db.prepare('UPDATE mailboxes SET last_pinned_post_date = ? WHERE id = ?').run(date, id);
+}
+
+export function getMailboxesWithDuePinnedItems(date: string): Mailbox[] {
+  const rows = db.prepare(`
+    SELECT DISTINCT m.* FROM mailboxes m
+    INNER JOIN items i ON i.mailbox_id = m.id
+    WHERE i.scheduled_date = ?
+  `).all(date) as unknown as MailboxRow[];
+  return rows.map(toMailbox);
 }
 
 export function addItem(fields: Omit<Item, 'id' | 'createdAt'>): Item {
