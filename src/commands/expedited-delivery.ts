@@ -51,9 +51,9 @@ function itemPreviewLine(item: Item): string {
   return `${icon} \`${item.filename ?? 'file'}\`${textPart}${datePart}`;
 }
 
-export const publish: Command = {
+export const expeditedDelivery: Command = {
   data: new SlashCommandBuilder()
-    .setName('publish')
+    .setName('expedited-delivery')
     .setDescription('Post the next item from your mailbox immediately and reset the schedule')
     .setDMPermission(false)
     .addChannelOption(o =>
@@ -115,7 +115,7 @@ export const publish: Command = {
   },
 };
 
-export async function handlePublishComponent(interaction: ButtonInteraction<'cached'>): Promise<void> {
+export async function handleExpeditedDeliveryComponent(interaction: ButtonInteraction<'cached'>): Promise<void> {
   const { action, args } = parseCustomId(interaction.customId);
   const mailboxId = parseInt(args[0] ?? '', 10);
   if (isNaN(mailboxId)) return;
