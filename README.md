@@ -11,6 +11,7 @@ Each user has their own mailbox per channel. When the schedule fires, the bot pi
 | `/establish-mailbox` | Everyone | Create or update a mailbox for a channel: pick the `channel`, the `time` (HH:mm UTC) for posts, and how often to post (`frequency`, e.g. `3d`, `2w`). |
 | `/mail` | Everyone | Add an item to your mailbox: `channel`, then at least one of `content` (text) or `attachment` (image or file). Optional `date` (MM/dd) pins the item to a specific calendar date. |
 | `/inspect` | Everyone | View your queue for a channel. Items are shown 10 per page; use the ◀/▶ buttons to navigate. Each item gets a 🗑 delete button (with a confirmation step). A **Randomize** toggle switches between in-order and random pick. The embed shows the current schedule (frequency, post time, next post) and an **✏️ Edit frequency** button to update it. |
+| `/publish` | Everyone | Post the next item from your mailbox immediately, with a confirmation step before it fires. The schedule resets from the moment of publishing. |
 
 All command replies are only visible to the person who ran them.
 

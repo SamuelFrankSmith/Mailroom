@@ -1,4 +1,9 @@
 export const ids = {
+  publish: {
+    confirmPinned: (mailboxId: number): string => `pub:confirm-pinned:${mailboxId}`,
+    confirmItem:   (mailboxId: number, itemId: number): string => `pub:confirm-item:${mailboxId}:${itemId}`,
+    cancel:        (mailboxId: number): string => `pub:cancel:${mailboxId}`,
+  },
   inspect: {
     delete:    (itemId: number,    page: number): string => `insp:del:${itemId}:${page}`,
     randomize: (mailboxId: number, page: number): string => `insp:rand:${mailboxId}:${page}`,

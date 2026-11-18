@@ -93,7 +93,7 @@ async function processMailbox(client: Client<true>, mailbox: Mailbox): Promise<v
   cleanupItem(chosen);
 }
 
-async function postItem(client: Client<true>, mailbox: Mailbox, item: Item): Promise<void> {
+export async function postItem(client: Client<true>, mailbox: Mailbox, item: Item): Promise<void> {
   const channel = await client.channels.fetch(mailbox.channelId);
   if (!channel?.isTextBased() || channel.isDMBased()) {
     throw new Error(`Channel ${mailbox.channelId} is not a postable text channel`);
@@ -118,7 +118,7 @@ async function postItem(client: Client<true>, mailbox: Mailbox, item: Item): Pro
   }
 }
 
-function cleanupItem(item: Item): void {
+export function cleanupItem(item: Item): void {
   if (item.type !== 'text') {
     try { unlinkSync(item.content); } catch { /* file already removed */ }
   }

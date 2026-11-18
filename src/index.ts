@@ -2,6 +2,7 @@ import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { openDatabase } from './database/db.js';
 import { commandMap } from './commands/index.js';
 import { handleInspectComponent, handleInspectModal } from './commands/inspect.js';
+import { handlePublishComponent } from './commands/publish.js';
 import { deployCommands } from './deploy-commands.js';
 import { startScheduler } from './scheduler/index.js';
 import { parseCustomId } from './ui/customIds.js';
@@ -34,9 +35,8 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (interaction.isButton()) {
       const { namespace } = parseCustomId(interaction.customId);
-      if (namespace === 'insp') {
-        await handleInspectComponent(interaction);
-      }
+      if (namespace === 'insp') await handleInspectComponent(interaction);
+      if (namespace === 'pub') await handlePublishComponent(interaction);
       return;
     }
 
