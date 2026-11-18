@@ -22,6 +22,7 @@ interface ItemRow {
   content: string;
   filename: string | null;
   file_size: number | null;
+  text_content: string | null;
   scheduled_date: string | null;
   created_at: string;
 }
@@ -50,6 +51,7 @@ function toItem(row: ItemRow): Item {
     content: row.content,
     filename: row.filename,
     fileSize: row.file_size,
+    textContent: row.text_content,
     scheduledDate: row.scheduled_date,
     createdAt: row.created_at,
   };
@@ -91,6 +93,9 @@ export function openDatabase(path: string): void {
   } catch { /* column already exists on upgraded installs */ }
   try {
     db.exec('ALTER TABLE items ADD COLUMN file_size INTEGER');
+  } catch { /* column already exists on upgraded installs */ }
+  try {
+    db.exec('ALTER TABLE items ADD COLUMN text_content TEXT');
   } catch { /* column already exists on upgraded installs */ }
 }
 
@@ -157,14 +162,15 @@ export function getMailboxesWithDuePinnedItems(date: string): Mailbox[] {
 
 export function addItem(fields: Omit<Item, 'id' | 'createdAt'>): Item {
   const result = db.prepare(`
-    INSERT INTO items (mailbox_id, type, content, filename, file_size, scheduled_date)
-    VALUES (:mailboxId, :type, :content, :filename, :fileSize, :scheduledDate)
+    INSERT INTO items (mailbox_id, type, content, filename, file_size, text_content, scheduled_date)
+    VALUES (:mailboxId, :type, :content, :filename, :fileSize, :textContent, :scheduledDate)
   `).run({
     mailboxId: fields.mailboxId,
     type: fields.type,
     content: fields.content,
     filename: fields.filename ?? null,
     fileSize: fields.fileSize ?? null,
+    textContent: fields.textContent ?? null,
     scheduledDate: fields.scheduledDate ?? null,
   });
 

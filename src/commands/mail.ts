@@ -145,18 +145,24 @@ export const mail: Command = {
         content: localPath,
         filename,
         fileSize: attachment.size,
+        textContent: content ?? null,
         scheduledDate: dateStr ?? null,
       });
-      addedItems.push({ label: `${isImage ? '🖼️' : '📄'} \`${filename}\``, date: dateStr ?? null });
+      const icon = isImage ? '🖼️' : '📄';
+      const textSuffix = content
+        ? ` + "${content.length > 80 ? content.slice(0, 80) + '…' : content}"`
+        : '';
+      addedItems.push({ label: `${icon} \`${filename}\`${textSuffix}`, date: dateStr ?? null });
     }
 
-    if (content) {
+    if (content && !attachment) {
       addItem({
         mailboxId: mailbox.id,
         type: 'text',
         content,
         filename: null,
         fileSize: null,
+        textContent: null,
         scheduledDate: dateStr ?? null,
       });
       const preview = content.length > 80 ? content.slice(0, 80) + '…' : content;

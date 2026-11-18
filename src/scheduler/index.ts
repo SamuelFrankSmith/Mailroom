@@ -110,8 +110,11 @@ export async function postItem(client: Client<true>, mailbox: Mailbox, item: Ite
       allowedMentions: { parse: [] },
     });
   } else {
+    const body = item.textContent
+      ? item.textContent + attribution
+      : `*sent by <@${mailbox.userId}>*`;
     await channel.send({
-      content: `*sent by <@${mailbox.userId}>*`,
+      content: body,
       files: [{ attachment: item.content, name: item.filename ?? 'file' }],
       allowedMentions: { parse: [] },
     });

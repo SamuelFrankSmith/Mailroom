@@ -44,8 +44,11 @@ function itemPreviewLine(item: Item): string {
     return text + datePart;
   }
   const icon = item.type === 'image' ? '🖼️' : '📄';
+  const textPart = item.textContent
+    ? ` + "${item.textContent.length > 80 ? item.textContent.slice(0, 80) + '…' : item.textContent}"`
+    : '';
   const datePart = item.scheduledDate ? ` *(pinned: ${item.scheduledDate})*` : '';
-  return `${icon} \`${item.filename ?? 'file'}\`${datePart}`;
+  return `${icon} \`${item.filename ?? 'file'}\`${textPart}${datePart}`;
 }
 
 export const publish: Command = {

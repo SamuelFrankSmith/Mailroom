@@ -17,6 +17,7 @@ export interface Item {
   content: string;        // text body OR absolute local file path
   filename: string | null;
   fileSize: number | null;       // bytes for image/file items; null for text
+  textContent: string | null;    // optional caption for image/file items; null for text-only items
   scheduledDate: string | null;  // 'MM/dd' or null
   createdAt: string;      // ISO 8601
 }

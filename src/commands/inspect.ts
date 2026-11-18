@@ -55,7 +55,10 @@ function buildInspectContent(
           return `${num} ${preview}${dateTag}`;
         }
         const icon = item.type === 'image' ? '🖼️' : '📄';
-        return `${num} ${icon} \`${item.filename ?? 'file'}\`${dateTag}`;
+        const textPart = item.textContent
+          ? ` + "${item.textContent.length > 80 ? item.textContent.slice(0, 80) + '…' : item.textContent}"`
+          : '';
+        return `${num} ${icon} \`${item.filename ?? 'file'}\`${textPart}${dateTag}`;
       })
       .join('\n');
   }
