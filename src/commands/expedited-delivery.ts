@@ -11,6 +11,7 @@ import type { ButtonInteraction, ChatInputCommandInteraction } from 'discord.js'
 import {
   getDatePinnedItems,
   getItemById,
+  getItemsForMailbox,
   getMailbox,
   getMailboxById,
   getUnscheduledItems,
@@ -61,6 +62,12 @@ export const expeditedDelivery: Command = {
         .setDescription('The channel whose mailbox to publish from')
         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setRequired(true)
+    )
+    .addIntegerOption(o =>
+      o.setName('item')
+        .setDescription('Item number from /inspect to post (default: next in queue)')
+        .setMinValue(1)
+        .setRequired(false)
     ),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>): Promise<void> {
@@ -72,6 +79,48 @@ export const expeditedDelivery: Command = {
         content: `❌ No mailbox for <#${channel.id}>. Use \`/establish-mailbox\` first.`,
         flags: MessageFlags.Ephemeral,
       });
+      return;
+    }
+
+    const itemNumber = interaction.options.getInteger('item');
+
+    if (itemNumber !== null) {
+      const allItems = getItemsForMailbox(mailbox.id);
+      const target = allItems[itemNumber - 1];
+
+      if (!target) {
+        await interaction.reply({
+          content: `❌ Item #${itemNumber} doesn't exist in your mailbox for <#${channel.id}>. Use \`/inspect\` to see your list.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      if (target.scheduledDate && target.scheduledDate !== getTodayMMdd()) {
+        await interaction.reply({
+          content: `❌ Item #${itemNumber} is pinned for ${target.scheduledDate} and can't be posted early.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle(`Publish to #${channel.name}?`)
+        .setDescription(itemPreviewLine(target))
+        .setFooter({ text: 'This will post immediately and reset your schedule.' });
+
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(ids.publish.confirmItem(mailbox.id, target.id))
+          .setLabel('Publish now')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(ids.publish.cancel(mailbox.id))
+          .setLabel('Cancel')
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
       return;
     }
 
